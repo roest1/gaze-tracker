@@ -1,8 +1,8 @@
 # classifier
 
 FastAI + PyTorch ResNet classifier fine-tuned on the GTSRB 4GB preprocessed
-bundle. Inherits the three-phase transfer-learning recipe from the original
-TSC class project, which reached ~97% test accuracy on `data0` (shuffled RGB).
+bundle. Frozen-head transfer learning on ImageNet-pretrained ResNet-34
+reaches ~96% test accuracy on `data0` in a single `fit_one_cycle` pass.
 
 ## Modules
 
@@ -10,9 +10,9 @@ TSC class project, which reached ~97% test accuracy on `data0` (shuffled RGB).
 |---|---|
 | `config.py` | `ClassifierConfig` — env-driven paths + hyperparameters |
 | `preprocessing.py` | explode GTSRB pickles into `label/image_*.png` trees |
-| `dataset.py` | FastAI `DataBlock` builders + `SelectiveRotation` augment |
+| `dataset.py` | FastAI `DataBlock` builder and held-out test DataLoader |
 | `model.py` | backbone resolution (ResNet 18/34/50) + `vision_learner` factory |
-| `train.py` | three-phase `fit_one_cycle` schedule |
+| `train.py` | frozen-head `fit_one_cycle` |
 | `evaluate.py` | accuracy, classification report, confusion matrix, ROC/AUC |
 
 ## End-to-end
@@ -27,7 +27,7 @@ uv run python scripts/download_data.py
 # 3. explode the pickle into PNGs under data/processed/data0images/
 uv run python -m dashcam_sign_detector.classifier.preprocessing --data-id 0
 
-# 4. train (3 phases)
+# 4. train
 uv run python -m dashcam_sign_detector.classifier.train \
     --data-id 0 --backbone resnet34
 
@@ -55,16 +55,12 @@ CLI flags on `train.py` / `evaluate.py` override the matching env vars.
 
 ## Training schedule
 
-The schedule is load-bearing for reproducing ~97% — don't rewrite to pure
-PyTorch in v1.
+Single `fit_one_cycle` over a frozen pretrained ResNet-34, 3 epochs at
+`lr=2.09e-3` (LR suggested by `lr_find` on the original TSC project and
+rechecked here). Re-run with `--lr-find` if you change backbone or
+dataset variant; the baked-in LR was tuned for ResNet-34 on `data0`.
 
-1. **Phase 1a** — frozen head, unaugmented data, 3 epochs at `lr=2.09e-3`
-2. **Phase 1b** — frozen head, selective-rotation aug, 2 epochs at same LR
-3. **Phase 2** — unfreeze, differential LR `slice(10^-6.5, 1.32e-6)`, 1 epoch
-
-`SelectiveRotation` skips directional signs (classes 36, 37, 38, 39) so
-*Keep-left / Keep-right* and *Go-straight-or-left / Go-straight-or-right*
-don't collapse into each other under augmentation.
-
-Re-run `lr_find` with `--lr-find` if you swap the backbone or dataset
-variant — the baked-in LRs were tuned for ResNet-34 on `data0`.
+The earlier TSC recipe also ran two augmented-frozen epochs followed by
+one unfrozen differential-LR epoch. On `data0` both regressed validation
+accuracy relative to the frozen-clean baseline, so both were removed
+(see git history for the old three-phase form).

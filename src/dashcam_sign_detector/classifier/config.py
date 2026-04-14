@@ -44,14 +44,8 @@ class ClassifierConfig:
     num_workers: int = int(os.environ.get("DSD_NUM_WORKERS", "4"))
     seed: int = int(os.environ.get("DSD_SEED", "42"))
 
-    phase1_epochs_clean: int = 3
-    phase1_epochs_augmented: int = 2
-    phase2_epochs: int = 1
-    phase1_lr: float = 2.0892962347716093e-03
-    phase2_lr_high: float = 1.3182567499825382e-06
-    phase2_lr_low: float = 10 ** -6.5
-
-    labels_to_avoid_rotation: tuple[str, ...] = ("36", "37", "38", "39")
+    train_epochs: int = 3
+    learning_rate: float = 2.0892962347716093e-03
 
     @property
     def raw_dir(self) -> Path:

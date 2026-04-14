@@ -122,7 +122,7 @@ def evaluate(cfg: ClassifierConfig, run_tag: str | None = None) -> EvaluationRes
 
     data = build_dataloaders(cfg)
     learn = load_learner(cfg.model_path)
-    learn.dls = data.reg_dls
+    learn.dls = data.dls
 
     val_loss, val_acc = learn.validate()
     test_loss, test_acc = learn.validate(dl=data.test_dl)
