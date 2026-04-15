@@ -1,7 +1,7 @@
 [project]
 name = "dashcam-sign-detector"
 version = "0.1.0"
-description = "End-to-end dashcam traffic sign detector: YOLOv10 detector + ResNet classifier fine-tuned on GTSRB."
+description = "End-to-end dashcam traffic sign detector: torchvision object detector + ResNet classifier fine-tuned on GTSRB."
 readme = "README.md"
 requires-python = ">=3.13,<3.14"
 license = { file = "LICENSE" }
@@ -19,6 +19,7 @@ dependencies = [
     "pandas>=2.2",
     "kaggle>=1.6",
     "ipython>=8.30",
+    "opencv-python>=4.13.0.92",
 ]
 
 [project.optional-dependencies]
